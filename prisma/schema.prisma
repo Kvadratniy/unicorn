@@ -1,0 +1,258 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                Int     @id @default(autoincrement())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  sessionToken String   @unique
+  userId       Int
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Общая модель пользователя
+model User {
+  id              Int               @id @default(autoincrement())
+  name            String?
+  email           String?           @unique
+  emailVerified   DateTime?
+  image           String?
+  role            Role              @default(ADMIN)
+  accounts        Account[]
+  sessions        Session[]
+  abonements      Abonement[]
+  // Связи с бронированиями, которые пользователь создал
+  createdBookings Booking[]
+  // Связи с бронированиями, где пользователь является клиентом
+  clientBookings  BookingToClient[]
+  visits          CompletedVisit[]
+  // one-to-one
+  profile         Profile?
+  employee        Employee?
+}
+
+model Profile {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  about     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // one-to-one
+  userId    Int?     @unique
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+// Модель Работника
+model Employee {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id])
+
+  // more-to-more
+  services EmployToService[]
+  bookings BookingToEmployees[]
+  shifts   Shift[]
+}
+
+model Shift {
+  id         Int      @id @default(autoincrement())
+  date       DateTime // Конкретная дата смены
+  startTime  DateTime // Время начала смены
+  endTime    DateTime // Время окончания смены
+  employeeId Int
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, date, startTime, endTime]) // Уникальность по сотруднику, дате и времени
+  // Проверка на то, что время начала должно быть раньше времени окончания
+  @@index(fields: [employeeId])
+}
+
+// Модель бронирования, связывающая клиента, работника, услугу и локацию.
+model Booking {
+  id             Int                  @id @default(autoincrement())
+  comment        String?
+  startDate      DateTime
+  endDate        DateTime
+  status         BookingStatus        @default(PLANED)
+  // Кто создал
+  creatorId      Int
+  creator        User                 @relation(fields: [creatorId], references: [id])
+  // Кабинет
+  roomId         Int
+  room           Room                 @relation(fields: [roomId], references: [id])
+  // Ученик
+  clients        BookingToClient[]
+  // Работники
+  employees      BookingToEmployees[]
+  // Услуги
+  services       BookingToService[]
+  // Связанная запись завершенного визита
+  completedVisit CompletedVisit?
+
+  @@unique([creatorId, roomId]) // Это создает уникальность комбинации creatorId, serviceId и roomId
+}
+
+//  Модель помещений
+model Room {
+  id          Int             @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  // one-to-more
+  bookings    Booking[]
+  // more-to-more
+  services    RoomToService[]
+}
+
+// Модель услуг
+model Service {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // one-to-more
+  // more-to-more
+  bookings   BookingToService[]
+  workers    EmployToService[]
+  rooms      RoomToService[]
+  abonements AbonementType[]
+}
+
+//  Модель абонемент
+model AbonementType {
+  id              Int         @id @default(autoincrement())
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  name            String
+  price           Decimal
+  numberOfLessons Int?
+  monthDuration   Int
+  // Услуга
+  serviceId       Int         @unique
+  service         Service     @relation(fields: [serviceId], references: [id])
+  soldAbonements  Abonement[]
+}
+
+model Abonement {
+  id               Int              @id @default(autoincrement())
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  clientId         Int
+  client           User             @relation(fields: [clientId], references: [id])
+  abonementTypeId  Int
+  completedLessons Int              @default(0)
+  abonementType    AbonementType    @relation(fields: [abonementTypeId], references: [id])
+  visits           CompletedVisit[]
+}
+
+model CompletedVisit {
+  id          Int        @id @default(autoincrement())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  bookingId   Int        @unique
+  booking     Booking    @relation(fields: [bookingId], references: [id])
+  clientId    Int
+  client      User       @relation(fields: [clientId], references: [id])
+  abonementId Int?
+  abonement   Abonement? @relation(fields: [abonementId], references: [id])
+  price       Decimal?
+}
+
+model EmployToService {
+  workerId  Int
+  serviceId Int
+  employee  Employee @relation(fields: [workerId], references: [id])
+  service   Service  @relation(fields: [serviceId], references: [id])
+
+  @@id([workerId, serviceId])
+}
+
+model RoomToService {
+  roomId    Int
+  serviceId Int
+  room      Room    @relation(fields: [roomId], references: [id])
+  service   Service @relation(fields: [serviceId], references: [id])
+
+  @@id([roomId, serviceId])
+}
+
+model BookingToService {
+  bookingId Int
+  serviceId Int
+  booking   Booking @relation(fields: [bookingId], references: [id])
+  service   Service @relation(fields: [serviceId], references: [id])
+
+  @@id([bookingId, serviceId])
+}
+
+model BookingToEmployees {
+  bookingId  Int
+  employeeId Int
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  @@id([bookingId, employeeId])
+}
+
+model BookingToClient {
+  bookingId Int
+  clientId  Int
+  booking   Booking @relation(fields: [bookingId], references: [id])
+  client    User    @relation(fields: [clientId], references: [id])
+
+  @@id([bookingId, clientId])
+}
+
+enum Role {
+  ADMIN
+  WORKER
+  CLIENT
+}
+
+enum BookingStatus {
+  PLANED
+  REJECTED
+  CLOSED
+}
