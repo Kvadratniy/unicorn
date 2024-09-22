@@ -4,12 +4,13 @@ import {
   type Booking,
   type BookingToEmployees,
   type BookingToService,
-  type BookingToClient,
+  type BookingToStudents,
 } from "@prisma/client";
 
 type BookingDTO = Pick<
   Booking,
-  "comment" | "startDate" | "endDate" | "creatorId" | "roomId"
+  // @ts-ignore
+  "comment" | "startDate" | "endDate" | "creatorId" | "locationId"
 >;
 
 interface ListParams {
@@ -32,14 +33,14 @@ export const createFullBooking = async (
       prisma.bookingToEmployees.create({
         data: {
           bookingId: newBooking.id,
-          employeeId,
+          profileId: employeeId,
         },
       }),
 
-      prisma.bookingToClient.create({
+      prisma.bookingToStudents.create({
         data: {
           bookingId: newBooking.id,
-          clientId,
+          profileId: clientId,
         },
       }),
 
@@ -69,9 +70,9 @@ export const addBookingEmployee = async (data: BookingToEmployees) => {
   );
 };
 
-export const addBookingClient = async (data: BookingToClient) => {
+export const addBookingClient = async (data: BookingToStudents) => {
   return wrapper(async () =>
-    prisma.bookingToClient.create({
+    prisma.bookingToStudents.create({
       data,
     })
   );

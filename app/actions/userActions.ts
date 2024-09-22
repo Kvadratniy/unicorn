@@ -94,7 +94,6 @@ export async function getUsersByFilter(filter: UserFilter): Promise<User[]> {
         AND: [
           filter.name ? { name: filter.name } : {},
           filter.email ? { email: filter.email } : {},
-          filter.role ? { role: filter.role } : {},
         ],
       },
       include: {

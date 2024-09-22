@@ -3,7 +3,7 @@
 import prisma, { wrapper } from '@/app/lib/prisma';
 import {
   type Service,
-  type RoomToService,
+  type LocationToService,
 } from "@prisma/client";
 
 interface ListParams {
@@ -15,8 +15,8 @@ interface ListParams {
 export const createService = async ({
   name,
   description,
-  roomId,
-}: Pick<Service, "name" | "description"> & Pick<RoomToService, "roomId">) => {
+  locationId,
+}: Pick<Service, "name" | "description"> & Pick<LocationToService, "locationId">) => {
   return wrapper(async () => {
     const newService = await prisma.service.create({
       data: {
@@ -25,10 +25,10 @@ export const createService = async ({
       },
     });
 
-    if (roomId) {
-      await prisma.roomToService.create({
+    if (locationId) {
+      await prisma.locationToService.create({
         data: {
-          roomId,
+          locationId,
           serviceId: newService.id,
         },
       });
@@ -38,9 +38,9 @@ export const createService = async ({
   });
 };
 
-export const createRoomToService = async (data: RoomToService) => {
+export const createRoomToService = async (data: LocationToService) => {
   return wrapper(async () => {
-    return await prisma.roomToService.create({
+    return await prisma.locationToService.create({
       data,
     });
   });
@@ -83,9 +83,9 @@ export async function getServices({
       skip,
       take: pageSize,
       include: {
-        rooms: {
+        locations: {
           include: {
-            room: true,
+            location: true,
           },
         },
       },
@@ -100,12 +100,12 @@ export async function getServices({
         description: item.description,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
-        rooms: item.rooms.map((r) => ({
-          id: r.room.id,
-          name: r.room.name,
-          description: r.room.description,
-          createdAt: r.room.createdAt,
-          updatedAt: r.room.updatedAt,
+        locations: item.locations.map((r) => ({
+          id: r.location.id,
+          name: r.location.name,
+          description: r.location.description,
+          createdAt: r.location.createdAt,
+          updatedAt: r.location.updatedAt,
         })),
       })),
       totalItems,

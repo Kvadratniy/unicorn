@@ -1,7 +1,8 @@
 import { getUsers } from "@/app/actions/userActions";
 import { BaseTable } from "@/app/ui/table/BaseTable";
 import Breadcrumbs from "@/app/ui/Breadcrumbs";
-import { Divider } from "@mantine/core";
+import { Paper, Avatar, Group, Text } from "@mantine/core";
+import BasePage from "@/app/ui/BasePage";
 
 export default async function Account({
   searchParams,
@@ -15,7 +16,7 @@ export default async function Account({
   const search = searchParams?.search || "";
   const users = await getUsers({
     page,
-    pageSize: 10,
+    pageSize: 2,
     search,
   });
 
@@ -69,18 +70,26 @@ export default async function Account({
   ];
 
   return (
-    <>
-      <Breadcrumbs
-        items={[{ title: "CRM" }, { title: "Пользователи", href: "/crm/user" }]}
-      />
-      <Divider variant="dashed" className="pb-4" />
-      <BaseTable
-        keyProperty="id"
-        struct={struct}
-        items={users.items}
-        total={users.totalPages}
-        currentPage={users.currentPage}
-      />
-    </>
+    <BasePage title="Пользователи">
+      <div className="flex flex-col gap-3">
+        {/* { JSON.stringify(users.items)} */}
+        {users.items.map((item, key) => (
+          <Paper key={item.id} withBorder radius="md" p={10}>
+            <Group>
+              <Avatar src={item.image} alt="Jacob Warnhalter" radius="xl" />
+              <div>
+                <Text fz="sm">{item.name}</Text>
+                <Text fz="xs" c="dimmed">
+                  {item.email}
+                </Text>
+                {/* <Text fz="xs" tt="uppercase" fw={700} c="dimmed">
+                  {item?.role}
+                </Text> */}
+              </div>
+            </Group>
+          </Paper>
+        ))}
+      </div>
+    </BasePage>
   );
 }

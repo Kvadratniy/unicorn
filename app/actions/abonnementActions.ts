@@ -1,6 +1,6 @@
 "use server";
 import prisma, { wrapper } from "@/app/lib/prisma";
-import { type AbonementType, type Abonement } from "@prisma/client";
+import { type AbonnementType, type Abonnement } from "@prisma/client";
 
 interface ListParams {
   page?: number;
@@ -8,24 +8,36 @@ interface ListParams {
   search?: string;
 }
 
-type AbonementTypeDTO = Pick<
-  AbonementType,
-  "name" | "price" | "numberOfLessons" | "monthDuration" | "serviceId"
+type AbonnementTypeDTO = Pick<
+  AbonnementType,
+  "name" | "price" | "numberOfLessons" | "monthDuration"
 >;
 
-type AbonementDTO = Pick<Abonement, "clientId" | "abonementTypeId">;
+// @ts-ignore
+type AbonnementDTO = Pick<Abonnement, "clientId" | "abonnementTypeId">;
 
-export const createAbonnementType = async (data: AbonementTypeDTO) => {
-  return wrapper(async () =>
-    prisma.abonementType.create({
-      data,
-    })
-  );
+export const createAbonnementType = async (
+  data: AbonnementTypeDTO,
+  serviceIds: number[]
+) => {
+  return wrapper(async () => {
+    await prisma.abonnementType.create({
+      data: {
+        ...data,
+        services: {
+          create: serviceIds.map(serviceId => ({
+            service: { connect: { id: serviceId } } // Создание записи для каждого serviceId
+          })),
+        },
+      },
+    });
+  });
 };
 
-export const createAbonnement = async (data: AbonementDTO) => {
+export const createAbonnement = async (data: AbonnementDTO) => {
   return wrapper(async () =>
-    prisma.abonement.create({
+    prisma.abonnement.create({
+      // @ts-ignore
       data,
     })
   );
@@ -35,21 +47,25 @@ export async function getAbonnementTypes({
   page = 1,
   pageSize = 10,
 }: ListParams): Promise<{
-  items: AbonementType[];
+  items: AbonnementType[];
   totalItems: number;
   totalPages: number;
   currentPage: number;
 }> {
   return wrapper(async () => {
     const skip = (page - 1) * pageSize;
-    const items = await prisma.abonementType.findMany({
+    const items = await prisma.abonnementType.findMany({
       skip,
       take: pageSize,
       include: {
-        service: true,
+        services: {
+          include: {
+            service: true, // Включаем данные о связанных услугах
+          },
+        },
       },
     });
-    const totalItems = await prisma.abonementType.count();
+    const totalItems = await prisma.abonnementType.count();
 
     return {
       items,
@@ -64,18 +80,18 @@ export async function getAbonnements({
   page = 1,
   pageSize = 10,
 }: ListParams): Promise<{
-  items: AbonementType[];
+  items: AbonnementType[];
   totalItems: number;
   totalPages: number;
   currentPage: number;
 }> {
   return wrapper(async () => {
     const skip = (page - 1) * pageSize;
-    const items = await prisma.abonement.findMany({
+    const items = await prisma.abonnement.findMany({
       skip,
       take: pageSize,
     });
-    const totalItems = await prisma.abonement.count();
+    const totalItems = await prisma.abonnement.count();
 
     return {
       items,

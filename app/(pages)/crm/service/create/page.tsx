@@ -1,21 +1,14 @@
 import { createService } from "@/app/actions/serviceActions";
-import { getRoomsSelect } from "@/app/actions/roomActions";
+import { getLocationsSelect } from "@/app/actions/roomActions";
 import ServiceForm from "../ui/ServiceForm";
-import Breadcrumbs from "@/app/ui/Breadcrumbs";
+import BasePage from "@/app/ui/BasePage";
 
 export default async function Abonement() {
-  const rooms = await getRoomsSelect();
+  const rooms = await getLocationsSelect();
 
   return (
-    <div className="flex flex-col gap-2 max-w-screen-lg">
-      <Breadcrumbs
-        items={[
-          { title: "CRM" },
-          { title: "Услуги", href: "/crm/service" },
-          { title: "Создание", href: "/crm/service/create" },
-        ]}
-      />
+    <BasePage title="Создание услуги">
       <ServiceForm onSubmit={createService} rooms={rooms} />
-    </div>
+    </BasePage>
   );
 }

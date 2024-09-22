@@ -49,48 +49,45 @@ model VerificationToken {
 
 // Общая модель пользователя
 model User {
-  id              Int               @id @default(autoincrement())
-  name            String?
-  email           String?           @unique
-  emailVerified   DateTime?
-  image           String?
-  role            Role              @default(ADMIN)
-  accounts        Account[]
-  sessions        Session[]
-  abonements      Abonement[]
-  // Связи с бронированиями, которые пользователь создал
-  createdBookings Booking[]
-  // Связи с бронированиями, где пользователь является клиентом
-  clientBookings  BookingToClient[]
-  visits          CompletedVisit[]
-  // one-to-one
-  profile         Profile?
-  employee        Employee?
+  id            Int       @id @default(autoincrement())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  // ПОЛЯ СВЯЗЕЙ
+  accounts      Account[]
+  sessions      Session[]
+  profile       Profile?
 }
 
+// Модель профиля пользователя
+// Является ключевой моделью пользователя
 model Profile {
-  id        Int      @id @default(autoincrement())
-  name      String?
-  about     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  // one-to-one
-  userId    Int?     @unique
-  user      User?    @relation(fields: [userId], references: [id])
-}
-
-// Модель Работника
-model Employee {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  userId    Int      @unique
-  user      User     @relation(fields: [userId], references: [id])
-
-  // more-to-more
-  services EmployToService[]
-  bookings BookingToEmployees[]
-  shifts   Shift[]
+  id               Int                  @id @default(autoincrement())
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  role             Role                 @default(ADMIN)
+  name             String
+  phone            String
+  about            String?
+  // ПОЛЯ СВЯЗЕЙ
+  // Связанный пользователь системы
+  userId           Int?                 @unique
+  user             User?                @relation(fields: [userId], references: [id])
+  // Бронирования, которые пользователь создал
+  createdBookings  Booking[]
+  // Завершенные визиты, где пользователь является учеником
+  completedVisits  CompletedVisit[]
+  // Список всех абонементов пользователя
+  abonnements       Abonnement[]
+  // Услуги которые пользователя может оказывать
+  services         ProfileToService[]
+  // Бронирования где пользователь клиент
+  bookings         BookingToStudents[]
+  // Бронирования, где пользователь учитель
+  employeeBookings BookingToEmployees[]
+  // Список смен пользователя
+  shifts           Shift[]
 }
 
 model Shift {
@@ -99,9 +96,8 @@ model Shift {
   startTime  DateTime // Время начала смены
   endTime    DateTime // Время окончания смены
   employeeId Int
-  employee   Employee @relation(fields: [employeeId], references: [id])
+  employee   Profile  @relation(fields: [employeeId], references: [id])
 
-  @@unique([employeeId, date, startTime, endTime]) // Уникальность по сотруднику, дате и времени
   // Проверка на то, что время начала должно быть раньше времени окончания
   @@index(fields: [employeeId])
 }
@@ -115,33 +111,32 @@ model Booking {
   status         BookingStatus        @default(PLANED)
   // Кто создал
   creatorId      Int
-  creator        User                 @relation(fields: [creatorId], references: [id])
-  // Кабинет
-  roomId         Int
-  room           Room                 @relation(fields: [roomId], references: [id])
-  // Ученик
-  clients        BookingToClient[]
-  // Работники
+  creator        Profile              @relation(fields: [creatorId], references: [id])
+  // Список кабинетов которые бронируют
+  locations      BookingToLocation[]
+  // Список учеников которые участвуют
+  students       BookingToStudents[]
+  // Список работников кто учавствует
   employees      BookingToEmployees[]
-  // Услуги
+  // Список услуг которые оказываются
   services       BookingToService[]
   // Связанная запись завершенного визита
   completedVisit CompletedVisit?
-
-  @@unique([creatorId, roomId]) // Это создает уникальность комбинации creatorId, serviceId и roomId
 }
 
 //  Модель помещений
-model Room {
-  id          Int             @id @default(autoincrement())
+model Location {
+  id          Int      @id @default(autoincrement())
   name        String
   description String?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  // one-to-more
-  bookings    Booking[]
-  // more-to-more
-  services    RoomToService[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // ПОЛЯ СВЯЗЕЙ
+  // Список бронирований данного помещения
+  bookings BookingToLocation[]
+  // Список услуг оказываемых в этой комнате
+  services LocationToService[]
 }
 
 // Модель услуг
@@ -152,70 +147,105 @@ model Service {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // one-to-more
-  // more-to-more
+  // ПОЛЯ СВЯЗЕЙ
+  // Профили которые оказывают данную услугу
+  profiles   ProfileToService[]
+  // Комнаты в которых оказывается данная услуга
+  locations  LocationToService[]
+  // Список бронирований данной услуги
   bookings   BookingToService[]
-  workers    EmployToService[]
-  rooms      RoomToService[]
-  abonements AbonementType[]
+  // Абонементы с этой услугой
+  abonnements abonnementTypeToService[]
 }
 
-//  Модель абонемент
-model AbonementType {
-  id              Int         @id @default(autoincrement())
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+//  Модель типа абонемента +
+model AbonnementType {
+  id              Int      @id @default(autoincrement())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   name            String
   price           Decimal
   numberOfLessons Int?
   monthDuration   Int
-  // Услуга
-  serviceId       Int         @unique
-  service         Service     @relation(fields: [serviceId], references: [id])
-  soldAbonements  Abonement[]
+
+  // ПОЛЯ СВЯЗЕЙ
+  // Услуга в данном абонементе
+  services   abonnementTypeToService[]
+  // Список абонементов созданных с таким типом
+  abonnements Abonnement[]
 }
 
-model Abonement {
-  id               Int              @id @default(autoincrement())
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  clientId         Int
-  client           User             @relation(fields: [clientId], references: [id])
-  abonementTypeId  Int
-  completedLessons Int              @default(0)
-  abonementType    AbonementType    @relation(fields: [abonementTypeId], references: [id])
-  visits           CompletedVisit[]
+//  Модель абонемент
+model Abonnement {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  endDateAt DateTime
+  // Статус абонемента
+  status    String   @default("active")
+
+  // ПОЛЯ СВЯЗЕЙ
+  // Тип абонемента
+  abonnementTypeId Int
+  abonnementType  AbonnementType   @relation(fields: [abonnementTypeId], references: [id])
+  // Профиль к которому привязан абонемент
+  profileId       Int
+  profile         Profile          @relation(fields: [profileId], references: [id])
+  // Визиты по абонементу
+  completedVisits CompletedVisit[]
 }
 
 model CompletedVisit {
-  id          Int        @id @default(autoincrement())
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  bookingId   Int        @unique
-  booking     Booking    @relation(fields: [bookingId], references: [id])
-  clientId    Int
-  client      User       @relation(fields: [clientId], references: [id])
-  abonementId Int?
-  abonement   Abonement? @relation(fields: [abonementId], references: [id])
-  price       Decimal?
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ПОЛЯ СВЯЗЕЙ
+  // Связанная запись бронирования
+  bookingId   Int         @unique
+  booking     Booking     @relation(fields: [bookingId], references: [id])
+  // ?
+  profileId   Int
+  profile     Profile     @relation(fields: [profileId], references: [id])
+  // Абонемент по которому был визит
+  abonnementId Int?
+  abonnement   Abonnement? @relation(fields: [abonnementId], references: [id])
 }
 
-model EmployToService {
-  workerId  Int
+model ProfileToService {
+  profileId Int
   serviceId Int
-  employee  Employee @relation(fields: [workerId], references: [id])
-  service   Service  @relation(fields: [serviceId], references: [id])
-
-  @@id([workerId, serviceId])
-}
-
-model RoomToService {
-  roomId    Int
-  serviceId Int
-  room      Room    @relation(fields: [roomId], references: [id])
+  profile   Profile @relation(fields: [profileId], references: [id])
   service   Service @relation(fields: [serviceId], references: [id])
 
-  @@id([roomId, serviceId])
+  @@id([profileId, serviceId])
+}
+
+model LocationToService {
+  locationId Int
+  serviceId  Int
+  location   Location @relation(fields: [locationId], references: [id])
+  service    Service  @relation(fields: [serviceId], references: [id])
+
+  @@id([locationId, serviceId])
+}
+
+model abonnementTypeToService {
+  abonnementTypeId Int
+  serviceId       Int
+  abonnementType  AbonnementType @relation(fields: [abonnementTypeId], references: [id])
+  service         Service        @relation(fields: [serviceId], references: [id])
+
+  @@id([abonnementTypeId, serviceId])
+}
+
+model BookingToLocation {
+  bookingId  Int
+  locationId Int
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+  location   Location @relation(fields: [locationId], references: [id])
+
+  @@id([locationId, bookingId])
 }
 
 model BookingToService {
@@ -228,21 +258,21 @@ model BookingToService {
 }
 
 model BookingToEmployees {
-  bookingId  Int
-  employeeId Int
-  booking    Booking  @relation(fields: [bookingId], references: [id])
-  employee   Employee @relation(fields: [employeeId], references: [id])
+  bookingId Int
+  profileId Int
+  booking   Booking @relation(fields: [bookingId], references: [id])
+  profile   Profile @relation(fields: [profileId], references: [id])
 
-  @@id([bookingId, employeeId])
+  @@id([bookingId, profileId])
 }
 
-model BookingToClient {
+model BookingToStudents {
   bookingId Int
-  clientId  Int
+  profileId Int
   booking   Booking @relation(fields: [bookingId], references: [id])
-  client    User    @relation(fields: [clientId], references: [id])
+  profile   Profile @relation(fields: [profileId], references: [id])
 
-  @@id([bookingId, clientId])
+  @@id([bookingId, profileId])
 }
 
 enum Role {
@@ -252,7 +282,8 @@ enum Role {
 }
 
 enum BookingStatus {
+  AGREEMENT
   PLANED
   REJECTED
-  CLOSED
+  COMPLITED
 }

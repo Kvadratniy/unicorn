@@ -68,7 +68,7 @@ export function NavbarMenu() {
     <nav className={classes.navbar}>
       <ScrollArea className={classes.links}>
         <div className={classes.linksInner}>
-          { Navigation.map((item, key) => (<div key={key}>{LinksGroup(item)}</div>)) }
+          { Navigation.map((item, key) => (<div key={key}>{LinksGroup(item as any)}</div>)) }
         </div>
       </ScrollArea>
     </nav>

@@ -13,9 +13,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-[200px_1fr]">
-      <NavbarMenu />
-      <div className="flex flex-col flex-grow px-xl py-md">{children}</div>
-    </div>
+    <div className="flex flex-col flex-grow overflow-hidden">{children}</div>
   );
 }

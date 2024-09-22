@@ -1,7 +1,8 @@
+
 export default function Home() {
   return (
-    <div>
-      <div>content</div>
+    <div className="p-4">
+      Home
     </div>
   );
 }

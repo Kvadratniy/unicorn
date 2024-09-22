@@ -4,7 +4,7 @@ import { TextInput, Textarea, Group, Button } from "@mantine/core";
 
 export default function RoomForm({
 	onSubmit
-}) {
+}: any) {
   const form = useForm({
     mode: "uncontrolled",
     initialValues: {
@@ -42,7 +42,7 @@ export default function RoomForm({
       <Group justify="flex-end" mt="md">
         <Button type="submit">Сохранить</Button>
       </Group>
-			{JSON.stringify(form)}
+			{/* {JSON.stringify(form)} */}
     </form>
   );
 }

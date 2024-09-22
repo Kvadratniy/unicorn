@@ -1,22 +1,22 @@
 "use server";
 import prisma, { wrapper } from '@/app/lib/prisma';
-import { type Room } from "@prisma/client";
+import { type Location } from "@prisma/client";
 
-type RoomDTO = Pick<Room, "name" | "description">;
+type LocationDTO = Pick<Location, "name" | "description">;
 
-// Create a new room
-export const createRoom = async (data: RoomDTO) => {
+// Create a new location
+export const createLocation = async (data: LocationDTO) => {
   return wrapper(async () => {
-    return await prisma.room.create({
+    return await prisma.location.create({
       data,
     });
   });
 };
 
-// Get all rooms
-export const getAllRooms = async () => {
+// Get all locations
+export const getAllLocations = async () => {
   return wrapper(async () => {
-    const rooms = await prisma.room.findMany({
+    const locations = await prisma.location.findMany({
       include: {
         services: {
           include: {
@@ -26,13 +26,13 @@ export const getAllRooms = async () => {
       },
     });
 
-    return rooms.map((room) => ({
-      id: room.id,
-      name: room.name,
-      description: room.description,
-      createdAt: room.createdAt,
-      updatedAt: room.updatedAt,
-      services: room.services.map((service) => ({
+    return locations.map((location) => ({
+      id: location.id,
+      name: location.name,
+      description: location.description,
+      createdAt: location.createdAt,
+      updatedAt: location.updatedAt,
+      services: location.services.map((service) => ({
         id: service.service.id,
         name: service.service.name,
         description: service.service.description,
@@ -43,23 +43,23 @@ export const getAllRooms = async () => {
   });
 };
 
-// Get a single room by ID
-export const getRoomById = async (id: number) => {
+// Get a single location by ID
+export const getLocationById = async (id: number) => {
   return wrapper(async () => {
-    return await prisma.room.findUnique({
+    return await prisma.location.findUnique({
       where: { id },
     });
   });
 };
 
-// Update a room by ID
-export const updateRoom = async (
+// Update a location by ID
+export const updateLocation = async (
   id: number,
   name?: string,
   description?: string
 ) => {
   return wrapper(async () => {
-    return await prisma.room.update({
+    return await prisma.location.update({
       where: { id },
       data: {
         name,
@@ -69,71 +69,71 @@ export const updateRoom = async (
   });
 };
 
-// Delete a room by ID
-export const deleteRoom = async (id: number) => {
+// Delete a location by ID
+export const deleteLocation = async (id: number) => {
   return wrapper(async () => {
-    return await prisma.room.delete({
+    return await prisma.location.delete({
       where: { id },
     });
   });
 };
 
-// Filter rooms by name
-export const filterRoomsByName = async (name: string) => {
+// Filter locations by name
+export const filterLocationsByName = async (name: string) => {
   return wrapper(async () => {
-    return await prisma.room.findMany({
+    return await prisma.location.findMany({
       where: { name: { contains: name } },
     });
   });
 };
 
-// Paginate rooms
-export const paginateRooms = async (page: number, pageSize: number) => {
+// Paginate locations
+export const paginateLocations = async (page: number, pageSize: number) => {
   return wrapper(async () => {
     const skip = (page - 1) * pageSize;
-    const rooms = await prisma.room.findMany({
+    const locations = await prisma.location.findMany({
       skip,
       take: pageSize,
     });
-    const totalRooms = await prisma.room.count();
+    const totalLocations = await prisma.location.count();
     return {
-      data: rooms,
-      total: totalRooms,
+      data: locations,
+      total: totalLocations,
       page,
       pageSize,
     };
   });
 };
 
-// Filter and paginate rooms
-export const filterAndPaginateRooms = async (
+// Filter and paginate locations
+export const filterAndPaginateLocations = async (
   name: string,
   page: number,
   pageSize: number
 ) => {
   return wrapper(async () => {
     const skip = (page - 1) * pageSize;
-    const rooms = await prisma.room.findMany({
+    const locations = await prisma.location.findMany({
       where: { name: { contains: name } },
       skip,
       take: pageSize,
     });
-    const totalRooms = await prisma.room.count({
+    const totalLocations = await prisma.location.count({
       where: { name: { contains: name } },
     });
     return {
-      data: rooms,
-      total: totalRooms,
+      data: locations,
+      total: totalLocations,
       page,
       pageSize,
     };
   });
 };
 
-export const getRoomsSelect = async () => {
+export const getLocationsSelect = async () => {
   return wrapper(async () => {
-    const rooms = await prisma.room.findMany();
-    return rooms.map((el) => ({
+    const locations = await prisma.location.findMany();
+    return locations.map((el) => ({
       value: el.id.toString(),
       label: el.name,
     }));

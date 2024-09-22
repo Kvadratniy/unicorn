@@ -12,7 +12,7 @@ async function main() {
   //   ],
   // });
 
-  await prisma.roomToService.create({
+  await prisma.locationToService.create({
     data: {
       roomId: 1,
       serviceId: 3,

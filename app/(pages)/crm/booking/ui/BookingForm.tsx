@@ -3,9 +3,7 @@ import { useForm } from "@mantine/form";
 import { TextInput, Select, Group, Button } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 
-export default function BookingForm({
-  services
-}) {
+export default function BookingForm({ services }: any) {
   const form = useForm({
     mode: "uncontrolled",
     initialValues: {
@@ -13,7 +11,7 @@ export default function BookingForm({
       startDate: "",
       endDate: "",
       creatorId: "",
-      roomId: "",
+      locationId: "",
       serviceId: "",
     },
   });
@@ -22,23 +20,21 @@ export default function BookingForm({
 
   return (
     <form action={action}>
-      <TextInput
-        label="Коммент"
+      <Select
+        className="w-full"
+        label="Выберите услугу"
         withAsterisk
-        description="Коммент"
-        placeholder="Коммент"
+        placeholder="Выберите услугу"
+        data={services}
+        key={form.key("serviceId")}
+        {...form.getInputProps("serviceId")}
+      />
+      <TextInput
+        label="Комментарий"
+        withAsterisk
         key={form.key("comment")}
         {...form.getInputProps("comment")}
       />
-      <Select
-          className="w-full"
-          label="Выберите услугу"
-          withAsterisk
-          placeholder="Выберите услугу"
-          data={services}
-          key={form.key("serviceId")}
-          {...form.getInputProps("serviceId")}
-        />
       <DateTimePicker
         label="Pick startDate"
         placeholder="Pick startDate"
@@ -54,7 +50,7 @@ export default function BookingForm({
       <Group justify="flex-end" mt="md">
         <Button type="submit">Сохранить</Button>
       </Group>
-      {JSON.stringify(form)}
+      {/* {JSON.stringify(form)} */}
     </form>
   );
 }

@@ -1,12 +1,18 @@
 import { getServices } from "@/app/actions/serviceActions";
 import { BaseTable } from "@/app/ui/table/BaseTable";
 import Breadcrumbs from "@/app/ui/Breadcrumbs";
-import { Divider, Anchor } from "@mantine/core";
+import {
+  Paper,
+  Avatar,
+  Group,
+  Text,
+  Card,
+  Divider,
+  Badge,
+} from "@mantine/core";
+import BasePage from "@/app/ui/BasePage";
+import CreateButton from "@/app/ui/button/CreateButton";
 
-const breadcrumbsItems = [
-  { title: "CRM" },
-  { title: "Услуги", href: "/crm/service" },
-];
 
 export default async function ServicesPage({
   searchParams,
@@ -64,22 +70,47 @@ export default async function ServicesPage({
   ];
 
   return (
-    <>
-      <Breadcrumbs items={breadcrumbsItems} />
-      <div className="flex items-center gap-2 pb-2">
-        <div className="text-sm text-gray-500">Функции:</div>
-        <Anchor size="sm" href="/crm/service/create">
-          Новая услуга
-        </Anchor>
+    <BasePage title="Услуги" action={<CreateButton path="/crm/service/create"/>}>
+      <div className="flex flex-col gap-3">
+        {services.items.map((item) => (
+          //  <Card shadow="xs" radius="md" withBorder></Card>
+          <Card shadow="xs" radius="md" withBorder key={item.id} p={10}>
+            <Group wrap="nowrap" align="start">
+              <Avatar
+                src="https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/avatars/avatar-2.png"
+                alt="Jacob Warnhalter"
+                radius="xl"
+              />
+              <div>
+                <Text fz="sm" fw={500}>{item.name}</Text>
+                <Text fz="xs" c="dimmed">
+                  {item.description}
+                </Text>
+                {/* {item.rooms.map((el, i) => (
+                  <Badge key={i} variant="light">
+                    {el.name}
+                  </Badge>
+                ))} */}
+                {/* {item.rooms.map((el, i) => (
+                  <Badge key={i} variant="light">
+                    {el.name}
+                  </Badge>
+                ))}
+                {item.rooms.map((el, i) => (
+                  <Badge key={i} variant="light">
+                    {el.name}
+                  </Badge>
+                ))}
+                {item.rooms.map((el, i) => (
+                  <Badge key={i} variant="light">
+                    {el.name}
+                  </Badge>
+                ))} */}
+              </div>
+            </Group>
+          </Card>
+        ))}
       </div>
-      <Divider variant="dashed" className="pb-1" />
-      <BaseTable
-        keyProperty="id"
-        struct={struct}
-        items={services.items}
-        total={services.totalPages}
-        currentPage={services.currentPage}
-      />
-    </>
+    </BasePage>
   );
 }

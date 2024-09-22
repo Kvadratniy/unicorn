@@ -1,11 +1,22 @@
 "use client";
-import { Card, Image, Text, Badge, Button, Group, Menu, ActionIcon, SimpleGrid, rem} from "@mantine/core";
-import { IconDots, IconEye, IconFileZip, IconTrash } from '@tabler/icons-react';
+import {
+  Card,
+  Image,
+  Text,
+  Badge,
+  Button,
+  Group,
+  Menu,
+  ActionIcon,
+  SimpleGrid,
+  rem,
+} from "@mantine/core";
+import { IconDots, IconEye, IconFileZip, IconTrash } from "@tabler/icons-react";
 
-export default function RoomCart({ room }) {
+export default function RoomCart({ room }: any) {
   return (
-    <Card shadow="sm" radius="md" withBorder>
-			<Card.Section withBorder inheritPadding py="xs">
+    <Card shadow="xs" radius="md" withBorder>
+      <Card.Section withBorder inheritPadding py={4}>
         <Group justify="space-between">
           <Text fw={500}>{room.name}</Text>
           <Menu withinPortal position="bottom-end" shadow="sm">
@@ -16,14 +27,24 @@ export default function RoomCart({ room }) {
             </Menu.Target>
 
             <Menu.Dropdown>
-              <Menu.Item leftSection={<IconFileZip style={{ width: rem(14), height: rem(14) }} />}>
+              <Menu.Item
+                leftSection={
+                  <IconFileZip style={{ width: rem(14), height: rem(14) }} />
+                }
+              >
                 Редактировать
               </Menu.Item>
-              <Menu.Item leftSection={<IconEye style={{ width: rem(14), height: rem(14) }} />}>
+              <Menu.Item
+                leftSection={
+                  <IconEye style={{ width: rem(14), height: rem(14) }} />
+                }
+              >
                 Бронирования
               </Menu.Item>
               <Menu.Item
-                leftSection={<IconTrash style={{ width: rem(14), height: rem(14) }} />}
+                leftSection={
+                  <IconTrash style={{ width: rem(14), height: rem(14) }} />
+                }
                 color="red"
               >
                 Удалить
@@ -32,23 +53,14 @@ export default function RoomCart({ room }) {
           </Menu>
         </Group>
       </Card.Section>
-
-
-      <Card.Section component="a" href="https://mantine.dev/">
-        <Image
-          src="https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-8.png"
-          height={160}
-          alt="Norway"
-        />
+      <Card.Section withBorder inheritPadding>
+        <Group gap="4" py={8}>
+          <Text c="dimmed" size="sm" span>
+            Услуги:
+          </Text>
+          {room.services.map((item: any,) => (<Badge variant="outline" size="xs" key={item.id}>{item.name}</Badge>))}
+        </Group>
       </Card.Section>
-			<Text mt="md" c="dimmed" size="sm">
-        <Text span inherit >
-					{room.description}
-        </Text>
-        <Text span inherit >
-					{room.services.map((item) => item.name)}
-        </Text>{' '}
-      </Text>
     </Card>
   );
 }

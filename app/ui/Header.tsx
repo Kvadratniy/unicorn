@@ -14,14 +14,14 @@
             priority alt={''}
           />
         </div>
-        <div className='flex gap-2 text-sm'>
-          <Link href="/admin/users" className='text-gray-900 hover:text-gray-600 text-sm'>
-            Главная
+        {/* <div className='flex gap-2 text-sm'>
+          <Link href="/crm/user" className='text-gray-900 hover:text-gray-600 text-sm'>
+            CRM
           </Link>
           <Link href="/news" className='text-gray-900 hover:text-gray-600 text-sm'>
             Новости
           </Link>
-        </div>
+        </div> */}
         <div className="flex">
           <UserButton/>
         </div>

@@ -10,7 +10,7 @@ import {
 import { type Service } from "@prisma/client";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
-type ServiceDTO = Pick<Service, "name" | "description"> & { roomId: number};
+type ServiceDTO = Pick<Service, "name" | "description"> & { locationId: number};
 
 interface PropsServiceForm {
   title?: string;
@@ -32,13 +32,13 @@ export default function ServiceForm({
   const form = useForm<ServiceFormInitValues>({
     mode: "uncontrolled",
     initialValues: {
-      name: null,
-      description: null,
-      roomId: null,
+      name: '',
+      description: '',
+      locationId: null,
     },
     validate: {
       name: (value) => (value ? null : "Name is required"),
-      roomId: (value) => (value ? null : "roomId is required"),
+      locationId: (value) => (value ? null : "locationId is required"),
     },
   });
 
@@ -47,14 +47,13 @@ export default function ServiceForm({
     const data = form.getValues() as ServiceDTO;
     await onSubmit({
       ...data,
-      roomId: Number(data.roomId),
+      locationId: Number(data.locationId),
     });
     router.push(pathname.split('/').slice(0, -1).join('/'));
   };
 
   return (
     <form action={action} className="flex flex-col gap-1">
-      <span className="text-gray-600 text-lg font-bold pb-3">{title}</span>
       <div className="flex flex-col gap-2 max-w-screen-sm">
         <TextInput
           withAsterisk
@@ -69,8 +68,8 @@ export default function ServiceForm({
           searchable
           placeholder="Помещение"
           data={rooms}
-          key={form.key("roomId")}
-          {...form.getInputProps("roomId")}
+          key={form.key("locationId")}
+          {...form.getInputProps("locationId")}
         />
         <Textarea
             autosize
@@ -78,8 +77,8 @@ export default function ServiceForm({
           resize="vertical"
           description="Описание услуги"
           placeholder="Описание"
-          key={form.key("name")}
-          {...form.getInputProps("name")}
+          key={form.key("description")}
+          {...form.getInputProps("description")}
         />
       </div>
 

@@ -6,61 +6,72 @@ import {
   Group,
   Button,
   NumberInput,
-  Divider,
+  MultiSelect,
 } from "@mantine/core";
-import { type AbonementType } from "@prisma/client";
+import { type AbonnementType } from "@prisma/client";
 
-type AbonementTypeDTO = Pick<
-  AbonementType,
-  "name" | "price" | "numberOfLessons" | "monthDuration" | "serviceId"
->;
+type AbonnementTypeDTO = Pick<
+  AbonnementType,
+  "name" | "price" | "numberOfLessons" | "monthDuration"
+> & { serviceIds: number[] };
 
 interface PropsAbonnementForm {
   title?: string;
-  onSubmit: (data: AbonementTypeDTO) => Promise<void>;
+  onSubmit: (
+    data: Pick<
+      AbonnementType,
+      "name" | "price" | "numberOfLessons" | "monthDuration"
+    >,
+    serviceIds: number[]
+  ) => Promise<void>;
   services: { value: string; label: string }[];
 }
 
-type AbonementFormInitValues = {
-  [K in keyof AbonementTypeDTO]: AbonementTypeDTO[K] | null;
+type AbonnementFormInitValues = {
+  [K in keyof AbonnementTypeDTO]: AbonnementTypeDTO[K] | null;
 };
 
 export default function AbonnementForm({
   onSubmit,
   services,
-  title = "Создание абонемента",
 }: PropsAbonnementForm) {
-  const form = useForm<AbonementFormInitValues>({
+  const form = useForm<AbonnementFormInitValues>({
     mode: "uncontrolled",
     initialValues: {
       name: null,
       price: null,
       numberOfLessons: null,
       monthDuration: null,
-      serviceId: null,
+      serviceIds: [],
     },
     validate: {
-      name: (value) => (value ? null : "Name is required"),
-      price: (value) => (value ? null : "Price is required"),
-      monthDuration: (value) => (value ? null : "Month duration is required"),
-      serviceId: (value) => (value ? null : "Service is required"),
+      // @ts-ignore
+      name: (value: string) => (value ? null : "Name is required"),
+      // @ts-ignore
+      price: (value: string) => (value ? null : "Price is required"),
+      // @ts-ignore
+      monthDuration: (value: string) =>
+        value ? null : "Month duration is required",
     },
   });
 
   const action = async () => {
     if (form.validate().hasErrors) return;
-    const data = form.getValues() as AbonementTypeDTO;
-    onSubmit({
-      ...data,
-      serviceId: Number(data.serviceId),
-    });
+    const data = form.getValues() as AbonnementTypeDTO;
+    onSubmit(
+      {
+        name: data.name,
+        price: data.price,
+        numberOfLessons: data.numberOfLessons,
+        monthDuration: data.monthDuration,
+      },
+      data.serviceIds.map((id) => Number(id))
+    );
   };
 
   return (
     <form action={action} className="flex flex-col gap-1">
-      <span className="text-gray-800 text-lg font-bold">{title}</span>
-      <Divider variant="dashed" className="pb-3" />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3">
         <TextInput
           withAsterisk
           description="Наименование абонемента"
@@ -68,24 +79,21 @@ export default function AbonnementForm({
           key={form.key("name")}
           {...form.getInputProps("name")}
         />
-        <Select
+        {JSON.stringify(services)}
+        <MultiSelect
           className="w-full"
-          description="Выберите услугу"
-          withAsterisk
-          placeholder="Услуга"
+          label="Выберите услуги"
           data={services}
-          key={form.key("serviceId")}
-          {...form.getInputProps("serviceId")}
+          key={form.key("serviceIds")}
+          {...form.getInputProps("serviceIds")}
         />
-      </div>
-      <div className="grid grid-cols-3 gap-3">
+
         <NumberInput
           description="Количество уроков"
           placeholder="Количество уроков"
           key={form.key("numberOfLessons")}
           {...form.getInputProps("numberOfLessons")}
         />
-
         <NumberInput
           withAsterisk
           description="Срок абонемента"
